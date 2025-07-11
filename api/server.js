@@ -26,6 +26,15 @@ app.get('/todos', async (req, res) => {
   }
 });
 
+app.delete('/todos/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.todo.delete({ where: { id } });
+    res.status(204).end();
+  } catch (error) {
+    res.status(500).json({ error: '削除に失敗しました' });
+  }
+});
 
 app.get('/todos/:id', async (req, res) => {
   const { id } = req.params;
@@ -71,6 +80,26 @@ app.post('/todos', async (req, res) => {
     res.status(201).json(todo);
   } catch (error) {
     res.status(500).json({ error: '作成に失敗しました' });
+  }
+});
+
+app.put('/todos/:id', async (req, res) => {
+  const { id } = req.params;
+  const { content, due } = req.body;
+  if (!content || !due) {
+    return res.status(400).json({ error: 'contentとdueは必須です' });
+  }
+  try {
+    const todo = await prisma.todo.update({
+      where: { id },
+      data: {
+        content,
+        due: new Date(due),
+      },
+    });
+    res.json(todo);
+  } catch (error) {
+    res.status(500).json({ error: '更新に失敗しました' });
   }
 });
 

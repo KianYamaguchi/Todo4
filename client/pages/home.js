@@ -9,10 +9,14 @@ export default function Home() {
 
   // TODO一覧を取得
   useEffect(() => {
-    fetch("http://localhost:8080/todos")
-      .then((res) => res.json())
-      .then((data) => setTodos(data));
+   fetchTodos();
   }, []);
+
+  const fetchTodos = async () => {
+    const res = await fetch("http://localhost:8080/todos");
+    const data = await res.json();
+    setTodos(data);
+  };
 
   // TODO追加
   const handleAdd = async (e) => {
@@ -28,6 +32,7 @@ export default function Home() {
       setTodos([...todos, newTodo]);
       setContent("");
       setDue("");
+      fetchTodos();
     }
   };
 
