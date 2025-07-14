@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import styles from '../styles/detail.module.css'; // 追加
 
 export default function DetailPage() {
   const router = useRouter();
@@ -63,20 +64,34 @@ export default function DetailPage() {
   if (!todo) return <div>Loading...</div>;
 
   return (
-    <div>
-      <h1>TODO詳細</h1>
+    <div className={styles.detailContainer}>
+      <h1 className={styles.detailTitle}>TODO詳細</h1>
       <h2>{content}</h2>
       <p>（期限: {due ? new Date(due).toLocaleDateString() : ""}）</p>
-      <button onClick={() => router.push('/home')}>戻る</button>
-      <button onClick={handleDelete}>削除</button>
+      <button
+        className={styles.detailButton}
+        onClick={() => router.push('/home')}
+      >
+        戻る
+      </button>
+      <button
+        className={`${styles.detailButton} ${styles.deleteButton}`}
+        onClick={handleDelete}
+      >
+        削除
+      </button>
       {nextTodo && (
-        <button onClick={() => router.push(`/detail?id=${nextTodo.id}`)}>
+        <button
+          className={`${styles.detailButton} ${styles.nextButton}`}
+          onClick={() => router.push(`/detail?id=${nextTodo.id}`)}
+        >
           次のTODOへ
         </button>
       )}
-      <form onSubmit={handleUpdate}>
+      <form className={styles.updateForm} onSubmit={handleUpdate}>
         <h3>Todoの更新</h3>
         <input
+          className={styles.updateInput}
           type="text"
           placeholder="やること"
           value={content}
@@ -84,15 +99,14 @@ export default function DetailPage() {
           required
         />
         <input
+          className={styles.updateInput}
           type="date"
           value={due ? due.split("T")[0] : ""}
           onChange={(e) => setDue(e.target.value)}
           required
         />
-        <button type="submit">更新</button>
+        <button className={styles.detailButton} type="submit">更新</button>
       </form>
-
-      
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import styles from "../styles/home.module.css"; // ← 修正
 
 export default function Home() {
   const router = useRouter();
@@ -37,9 +38,9 @@ export default function Home() {
   };
 
   return (
-    <div style={{ maxWidth: 500, margin: "2rem auto" }}>
+    <div className={styles.container}>
       <h1>TODOアプリ</h1>
-      <form onSubmit={handleAdd} style={{ marginBottom: "1rem" }}>
+      <form className={styles.form} onSubmit={handleAdd}>
         <input
           type="text"
           placeholder="やること"
@@ -53,13 +54,18 @@ export default function Home() {
           onChange={(e) => setDue(e.target.value)}
           required
         />
-        <button type="submit">追加</button>
+        <button className={styles.button} type="submit">追加</button>
       </form>
-      <ul>
+      <ul className={styles.list}>
         {todos.map((todo) => (
-          <li key={todo.id}>
-              {todo.content}（期限: {new Date(todo.due).toLocaleDateString()}）
-              <button onClick={() => router.push(`/detail?id=${todo.id}`)}>詳細</button>
+          <li className={styles.item} key={todo.id}>
+            {todo.content}（期限: {new Date(todo.due).toLocaleDateString()}）
+            <button
+              className={styles.itemButton}
+              onClick={() => router.push(`/detail?id=${todo.id}`)}
+            >
+              詳細
+            </button>
           </li>
         ))}
       </ul>
