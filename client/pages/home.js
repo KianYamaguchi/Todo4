@@ -79,6 +79,16 @@ export default function Home() {
           </li>
         ))}
       </ul>
+      <button
+  className={styles.button}
+  style={{ marginBottom: "1rem" }}
+  onClick={() => {
+    localStorage.removeItem("token");
+    router.push("/login");
+  }}
+>
+  ログアウト
+</button>
     </div>
   );
 }
