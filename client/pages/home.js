@@ -10,22 +10,32 @@ export default function Home() {
 
   // TODO一覧を取得
   useEffect(() => {
-   fetchTodos();
+    const token = localStorage.getItem("token"); // ログイン時に保存したトークン
+    if (!token) return;
+   fetchTodos(token);
   }, []);
 
-  const fetchTodos = async () => {
-    const res = await fetch("http://localhost:8080/todos");
+  const fetchTodos = async (token) => {
+    const res = await fetch("http://localhost:8080/todos", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     const data = await res.json();
-    setTodos(data);
+    setTodos(Array.isArray(data) ? data : []);
   };
 
   // TODO追加
   const handleAdd = async (e) => {
     e.preventDefault();
     if (!content || !due) return;
+    const token = localStorage.getItem("token");
     const res = await fetch("http://localhost:8080/todos", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({ content, due }),
     });
     if (res.ok) {
@@ -33,7 +43,7 @@ export default function Home() {
       setTodos([...todos, newTodo]);
       setContent("");
       setDue("");
-      fetchTodos();
+      fetchTodos(token);
     }
   };
 

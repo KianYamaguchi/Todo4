@@ -23,6 +23,10 @@
   margin-right: 0.5rem;
   transition: background 0.2s;
 }
+.message {
+  color: #e53e3e; /* 赤色 */
+  margin-top: 1rem;
+}
 
 .detailButton:hover {
   background: #005bb5;
