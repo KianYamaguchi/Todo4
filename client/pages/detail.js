@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import styles from '../styles/detail.module.css'; // 追加
 
+const token = typeof window !== "undefined" ? localStorage.getItem("token") : "";
+
 export default function DetailPage() {
   const router = useRouter();
   const { id } = router.query;
@@ -10,12 +12,17 @@ export default function DetailPage() {
   const [nextTodo, setNextTodo] = useState(null);
   const [content, setContent] = useState('');
   const [due, setDue] = useState('');
+  const [message, setMessage] = useState('');
 
 
   useEffect(() => {
     if (!id) return;
     const fetchTodo = async () => {
-      const res = await fetch(`http://localhost:8080/todos/${id}`);
+      const res = await fetch(`http://localhost:8080/todos/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const data = await res.json();
       setTodo(data);
       setContent(data.content); // ← 追加
@@ -27,7 +34,11 @@ export default function DetailPage() {
   useEffect(() => {
     if (!id) return;
     const fetchNextTodo = async () => {
-      const res = await fetch(`http://localhost:8080/todos/${id}/next`);
+      const res = await fetch(`http://localhost:8080/todos/${id}/next`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const data = await res.json();
       setNextTodo(data);
     };
@@ -37,21 +48,32 @@ export default function DetailPage() {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+    console.log(token);
     if (!todo) return;
     const res = await fetch(`http://localhost:8080/todos/${todo.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({ content, due }),
     });
     if (res.ok) {
       const updatedTodo = await res.json();
       setTodo(updatedTodo);
+      setMessage("TODOが更新されました。");
+      setTimeout(() => {
+        setMessage("");
+      }, 1500);
     }
   };
   const handleDelete = async () => {
     if (!todo) return;
     const res = await fetch(`http://localhost:8080/todos/${todo.id}`, {
       method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
     if (res.ok) {
       setTodo(null);
@@ -105,6 +127,7 @@ export default function DetailPage() {
           onChange={(e) => setDue(e.target.value)}
           required
         />
+        {message && <p className={styles.message}>{message}</p>}
         <button className={styles.detailButton} type="submit">更新</button>
       </form>
     </div>
