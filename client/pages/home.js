@@ -7,6 +7,7 @@ export default function Home() {
   const [todos, setTodos] = useState([]);
   const [content, setContent] = useState("");
   const [due, setDue] = useState("");
+  const [draggedIdx, setDraggedIdx] = useState(null);
 
   // TODO一覧を取得
   useEffect(() => {
@@ -47,6 +48,48 @@ export default function Home() {
     }
   };
 
+  const handleDragStart = (idx) => setDraggedIdx(idx);
+
+  const handleDragOver = (e) => e.preventDefault(); //ドロップ禁止を防ぐために必要
+
+  const handleDrop = async (idx) => {
+    if (draggedIdx === null || draggedIdx === idx) return; // ドラッグ元とドロップ先が同じ場合は何もしない
+    const updated = [...todos];
+    const [moved] = updated.splice(draggedIdx, 1); // ドラッグした要素を削除してmovedに保存
+    updated.splice(idx, 0, moved); // ドロップ先にmovedを追加
+    setTodos(updated);
+    setDraggedIdx(null);
+
+    // 並び替え後の順番をAPIで送信
+    const token = localStorage.getItem("token");
+    await fetch("http://localhost:8080/todos/order", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        orders: updated.map((todo, idx) => ({ id: todo.id, order: idx })),
+      }),
+    });
+  };
+
+  const handleSort = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    const res = await fetch("http://localhost:8080/todos/sort", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (res.ok) {
+      const sortedTodos = await res.json();
+      setTodos(sortedTodos);
+    }
+  };
+
   return (
     <div className={styles.container}>
       <h1>TODOアプリ</h1>
@@ -68,9 +111,23 @@ export default function Home() {
           追加
         </button>
       </form>
+      <form onSubmit={handleSort}>
+        <button>期限順</button>
+      </form>
       <ul className={styles.list}>
-        {todos.map((todo) => (
-          <li className={styles.item} key={todo.id}>
+        {todos.map((todo, idx) => (
+          <li
+            className={styles.item}
+            key={todo.id}
+            draggable
+            onDragStart={() => handleDragStart(idx)}
+            onDragOver={handleDragOver}
+            onDrop={() => handleDrop(idx)}
+            style={{
+              opacity: draggedIdx === idx ? 0.5 : 1,
+              cursor: "move",
+            }}
+          >
             {todo.content}（期限: {new Date(todo.due).toLocaleDateString()}）
             <button
               className={styles.itemButton}
