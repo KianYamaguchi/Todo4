@@ -175,6 +175,35 @@ app.put("/todos/:id", authMiddleware, async (req, res) => {
   }
 });
 
+app.post("/todos/sort", authMiddleware, async (req, res) => {
+  const userId = req.user.userId;
+  try {
+    // 1. 日付順で取得
+    const todos = await prisma.todo.findMany({
+      where: { userId },
+      orderBy: { due: "asc" },
+    });
+
+    // 2. 日付順でorderを振り直す
+    const updatePromises = todos.map((todo, idx) =>
+      prisma.todo.update({
+        where: { id: todo.id },
+        data: { order: idx },
+      })
+    );
+    await Promise.all(updatePromises);
+
+    // 3. 更新後の一覧を返す（order順で取得）
+    const sortedTodos = await prisma.todo.findMany({
+      where: { userId },
+      orderBy: { order: "asc" },
+    });
+    res.json(sortedTodos);
+  } catch (error) {
+    res.status(500).json({ error: "並び替えに失敗しました" });
+  }
+});
+
 app.post("/register", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
