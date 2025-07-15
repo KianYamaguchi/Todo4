@@ -3,11 +3,13 @@ const { PrismaClient } = require('@prisma/client'); // 追加
 const cors = require('cors'); // 追加
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+require('dotenv').config(); // 環境変数の読み込み
 
 const app = express();
 const port = 8080;
 
 const prisma = new PrismaClient(); // 追加
+const JWT_SECRET = process.env.JWT_SECRET
 
 app.use(express.json()); // 追加
 app.use(cors()); // 追加
@@ -18,7 +20,7 @@ function authMiddleware(req, res, next) {
   if (!authHeader) return res.status(401).json({ error: '認証が必要です' });
   const token = authHeader.split(' ')[1];
   try {
-    const decoded = jwt.verify(token, 'your_secret_key');
+    const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded; // { userId: ... }
     next();
   } catch {
@@ -188,7 +190,7 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'メールアドレスまたはパスワードが違います' });
     }
     // JWTトークン発行
-    const token = jwt.sign({ userId: user.id }, 'your_secret_key', { expiresIn: '1h' });
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
     res.json({ message: 'ログイン成功。まもなく遷移します', token });
   } catch (error) {
     res.status(500).json({ error: 'ログインに失敗しました' });
