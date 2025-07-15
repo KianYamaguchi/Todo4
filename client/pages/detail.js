@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import styles from '../styles/detail.module.css'; // 追加
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import styles from "../styles/detail.module.css"; // 追加
 
-const token = typeof window !== "undefined" ? localStorage.getItem("token") : "";
+const token =
+  typeof window !== "undefined" ? localStorage.getItem("token") : "";
 
 export default function DetailPage() {
   const router = useRouter();
@@ -10,10 +11,9 @@ export default function DetailPage() {
 
   const [todo, setTodo] = useState(null);
   const [nextTodo, setNextTodo] = useState(null);
-  const [content, setContent] = useState('');
-  const [due, setDue] = useState('');
-  const [message, setMessage] = useState('');
-
+  const [content, setContent] = useState("");
+  const [due, setDue] = useState("");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     if (!id) return;
@@ -25,8 +25,8 @@ export default function DetailPage() {
       });
       const data = await res.json();
       setTodo(data);
-      setContent(data.content); // ← 追加
-      setDue(data.due);  
+      setContent(data.content);
+      setDue(data.due);
     };
     fetchTodo();
   }, [id]);
@@ -45,15 +45,14 @@ export default function DetailPage() {
     fetchNextTodo();
   }, [id]);
 
-
   const handleUpdate = async (e) => {
     e.preventDefault();
     console.log(token);
     if (!todo) return;
     const res = await fetch(`http://localhost:8080/todos/${todo.id}`, {
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ content, due }),
@@ -70,18 +69,16 @@ export default function DetailPage() {
   const handleDelete = async () => {
     if (!todo) return;
     const res = await fetch(`http://localhost:8080/todos/${todo.id}`, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
     if (res.ok) {
       setTodo(null);
-      router.push('/home');
+      router.push("/home");
     }
   };
-
-
 
   if (!todo) return <div>Loading...</div>;
 
@@ -92,7 +89,7 @@ export default function DetailPage() {
       <p>（期限: {due ? new Date(due).toLocaleDateString() : ""}）</p>
       <button
         className={styles.detailButton}
-        onClick={() => router.push('/home')}
+        onClick={() => router.push("/home")}
       >
         戻る
       </button>
@@ -128,7 +125,9 @@ export default function DetailPage() {
           required
         />
         {message && <p className={styles.message}>{message}</p>}
-        <button className={styles.detailButton} type="submit">更新</button>
+        <button className={styles.detailButton} type="submit">
+          更新
+        </button>
       </form>
     </div>
   );
