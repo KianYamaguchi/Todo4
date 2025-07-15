@@ -12,7 +12,7 @@ export default function Home() {
   useEffect(() => {
     const token = localStorage.getItem("token"); // ログイン時に保存したトークン
     if (!token) return;
-   fetchTodos(token);
+    fetchTodos(token);
   }, []);
 
   const fetchTodos = async (token) => {
@@ -64,7 +64,9 @@ export default function Home() {
           onChange={(e) => setDue(e.target.value)}
           required
         />
-        <button className={styles.button} type="submit">追加</button>
+        <button className={styles.button} type="submit">
+          追加
+        </button>
       </form>
       <ul className={styles.list}>
         {todos.map((todo) => (
@@ -80,15 +82,15 @@ export default function Home() {
         ))}
       </ul>
       <button
-  className={styles.button}
-  style={{ marginBottom: "1rem" }}
-  onClick={() => {
-    localStorage.removeItem("token");
-    router.push("/login");
-  }}
->
-  ログアウト
-</button>
+        className={styles.button}
+        style={{ marginBottom: "1rem" }}
+        onClick={() => {
+          localStorage.removeItem("token");
+          router.push("/login");
+        }}
+      >
+        ログアウト
+      </button>
     </div>
   );
 }
