@@ -24,4 +24,5 @@ model Todo {
   due     DateTime
   content String
   userId  String // ← 追加
+  order     Int     // ← 並び順を保持するカラム
 }

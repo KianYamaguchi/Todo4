@@ -22,7 +22,12 @@ function authMiddleware(req, res, next) {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
     next();
-  } catch {
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({
+        error: "トークンの有効期限が切れています。再度ログインしてください。",
+      });
+    }
     res.status(401).json({ error: "トークンが不正です" });
   }
 }
@@ -37,7 +42,7 @@ app.get("/todos", authMiddleware, async (req, res) => {
   try {
     const todos = await prisma.todo.findMany({
       where: { userId }, // 自分のTodoだけ
-      orderBy: { due: "asc" },
+      orderBy: { order: "asc" },
     });
     res.json(todos);
   } catch (error) {
@@ -58,6 +63,27 @@ app.delete("/todos/:id", authMiddleware, async (req, res) => {
     res.status(204).end();
   } catch (error) {
     res.status(500).json({ error: "削除に失敗しました" });
+  }
+});
+
+app.put("/todos/order", authMiddleware, async (req, res) => {
+  const userId = req.user.userId;
+  const { orders } = req.body; // [{ id, order }, ...]
+  if (!Array.isArray(orders)) {
+    return res.status(400).json({ error: "orders配列が必要です" });
+  }
+  try {
+    // すべてのTODOのorderを一括更新
+    const updatePromises = orders.map(({ id, order }) =>
+      prisma.todo.update({
+        where: { id },
+        data: { order },
+      })
+    );
+    await Promise.all(updatePromises);
+    res.json({ message: "並び順を更新しました" });
+  } catch (error) {
+    res.status(500).json({ error: "並び順の更新に失敗しました" });
   }
 });
 
@@ -96,17 +122,24 @@ app.get("/todos/:id/next", authMiddleware, async (req, res) => {
 // TODO追加
 app.post("/todos", authMiddleware, async (req, res) => {
   const { content, due } = req.body;
-  const userId = req.user.userId; // トークンから取得
-  console.log("userId:", userId); // デバッグ用
+  const userId = req.user.userId;
   if (!content || !due) {
     return res.status(400).json({ error: "contentとdueは必須です" });
   }
   try {
+    // 既存TODOの最大orderを取得
+    const maxOrderTodo = await prisma.todo.findFirst({
+      where: { userId },
+      orderBy: { order: "desc" },
+    });
+    const nextOrder = maxOrderTodo ? maxOrderTodo.order + 1 : 0;
+
     const todo = await prisma.todo.create({
       data: {
         content,
         due: new Date(due),
-        userId, // ここで保存
+        userId,
+        order: nextOrder, // ← ここで番号を振る
       },
     });
     res.status(201).json(todo);
@@ -142,13 +175,41 @@ app.put("/todos/:id", authMiddleware, async (req, res) => {
   }
 });
 
+app.post("/todos/sort", authMiddleware, async (req, res) => {
+  const userId = req.user.userId;
+  try {
+    // 1. 日付順で取得
+    const todos = await prisma.todo.findMany({
+      where: { userId },
+      orderBy: { due: "asc" },
+    });
+
+    // 2. 日付順でorderを振り直す
+    const updatePromises = todos.map((todo, idx) =>
+      prisma.todo.update({
+        where: { id: todo.id },
+        data: { order: idx },
+      })
+    );
+    await Promise.all(updatePromises);
+
+    // 3. 更新後の一覧を返す（order順で取得）
+    const sortedTodos = await prisma.todo.findMany({
+      where: { userId },
+      orderBy: { order: "asc" },
+    });
+    res.json(sortedTodos);
+  } catch (error) {
+    res.status(500).json({ error: "並び替えに失敗しました" });
+  }
+});
+
 app.post("/register", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: "emailとpasswordは必須です" });
   }
   try {
-    // 既存ユーザー確認
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return res
