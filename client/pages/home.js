@@ -11,6 +11,7 @@ export default function Home() {
   const [draggedIdx, setDraggedIdx] = useState(null);
   const [userEmail, setUserEmail] = useState("");
   const [checkedIds, setCheckedIds] = useState([]);
+  const [loading, setLoading] = useState(true); // ローディング状態を管理
 
   // TODO一覧を取得
   useEffect(() => {
@@ -29,6 +30,7 @@ export default function Home() {
   }, []);
 
   const fetchTodos = async (token) => {
+    setLoading(true); // フェッチ開始前にローディングをtrueに
     const res = await fetch("http://localhost:8080/todos", {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -36,6 +38,8 @@ export default function Home() {
     });
     const data = await res.json();
     setTodos(Array.isArray(data) ? data : []);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setLoading(false); // フェッチ完了後にローディングをfalseに
   };
 
   // TODO追加
@@ -179,67 +183,71 @@ export default function Home() {
           <button>優先度順</button>
         </form>
       </div>
-      <ul className={styles.list}>
-        {todos.map((todo, idx) => (
-          <li
-            className={styles.item}
-            key={todo.id}
-            draggable
-            onDragStart={() => handleDragStart(idx)}
-            onDragOver={handleDragOver}
-            onDrop={() => handleDrop(idx)}
-            style={{
-              opacity: draggedIdx === idx ? 0.5 : 1,
-              cursor: "move",
-            }}
-          >
-            <div>
-              <div>
-                <input
-                  type="checkbox"
-                  style={{ fontWeight: "bold" }}
-                  checked={checkedIds.includes(todo.id)}
-                  onChange={() => {
-                    setCheckedIds((prev) =>
-                      prev.includes(todo.id)
-                        ? prev.filter((id) => id !== todo.id)
-                        : [...prev, todo.id]
-                    );
-                  }}
-                />
-                {todo.content}
-              </div>
-              <div style={{ fontSize: "0.95em", color: "#666" }}>
-                期限: {new Date(todo.due).toLocaleDateString()}
-                <span
-                  style={{
-                    color:
-                      todo.priority === "HIGH"
-                        ? "#e74c3c"
-                        : todo.priority === "MEDIUM"
-                        ? "#e67e22"
-                        : "#3498db",
-                    fontWeight: "bold",
-                  }}
-                >
-                  優先度:{" "}
-                  {todo.priority === "HIGH"
-                    ? "高"
-                    : todo.priority === "MEDIUM"
-                    ? "中"
-                    : "低"}
-                </span>
-              </div>
-            </div>
-            <button
-              className={styles.itemButton}
-              onClick={() => router.push(`/detail?id=${todo.id}`)}
+      {loading ? (
+        <div className={styles.spinner}>Loading...</div>
+      ) : (
+        <ul className={styles.list}>
+          {todos.map((todo, idx) => (
+            <li
+              className={styles.item}
+              key={todo.id}
+              draggable
+              onDragStart={() => handleDragStart(idx)}
+              onDragOver={handleDragOver}
+              onDrop={() => handleDrop(idx)}
+              style={{
+                opacity: draggedIdx === idx ? 0.5 : 1,
+                cursor: "move",
+              }}
             >
-              詳細
-            </button>
-          </li>
-        ))}
-      </ul>
+              <div>
+                <div>
+                  <input
+                    type="checkbox"
+                    style={{ fontWeight: "bold" }}
+                    checked={checkedIds.includes(todo.id)}
+                    onChange={() => {
+                      setCheckedIds((prev) =>
+                        prev.includes(todo.id)
+                          ? prev.filter((id) => id !== todo.id)
+                          : [...prev, todo.id]
+                      );
+                    }}
+                  />
+                  {todo.content}
+                </div>
+                <div style={{ fontSize: "0.95em", color: "#666" }}>
+                  期限: {new Date(todo.due).toLocaleDateString()}
+                  <span
+                    style={{
+                      color:
+                        todo.priority === "HIGH"
+                          ? "#e74c3c"
+                          : todo.priority === "MEDIUM"
+                          ? "#e67e22"
+                          : "#3498db",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    優先度:{" "}
+                    {todo.priority === "HIGH"
+                      ? "高"
+                      : todo.priority === "MEDIUM"
+                      ? "中"
+                      : "低"}
+                  </span>
+                </div>
+              </div>
+              <button
+                className={styles.itemButton}
+                onClick={() => router.push(`/detail?id=${todo.id}`)}
+              >
+                詳細
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
       <button
         className={styles.button}
         style={{ marginBottom: "1rem", marginRight: "1rem" }}

@@ -87,7 +87,61 @@ export default function Login() {
         新規登録はこちら
       </button>
       {message && (
-        <p style={{ marginTop: "1rem", color: "#e53e3e" }}>{message}</p>
+        <div style={{ marginTop: "1.5rem", textAlign: "center" }}>
+          {/* ログイン成功時だけスピナー＋チェックマーク */}
+          {message.includes("成功") ? (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              {/* スピナー */}
+              <div
+                style={{
+                  width: "2.5em",
+                  height: "2.5em",
+                  border: "0.4em solid #0070f3",
+                  borderTop: "0.4em solid #eaf6ff",
+                  borderRadius: "50%",
+                  animation: "spin 0.8s linear infinite",
+                  marginBottom: "0.7em",
+                }}
+              />
+              {/* チェックマークをアニメーションで表示 */}
+              <span
+                style={{
+                  display: "inline-block",
+                  fontSize: "2em",
+                  color: "#38a169",
+                  opacity: message.includes("成功") ? 1 : 0,
+                  transition: "opacity 0.5s 1s",
+                  fontWeight: "bold",
+                }}
+              >
+                ✔
+              </span>
+              <p
+                style={{
+                  marginTop: "0.5em",
+                  color: "#0070f3",
+                  fontWeight: "bold",
+                }}
+              >
+                {message}
+              </p>
+              {/* スピナー用アニメーション */}
+              <style>{`
+                @keyframes spin {
+                  to { transform: rotate(360deg); }
+                }
+              `}</style>
+            </div>
+          ) : (
+            <p style={{ color: "#e53e3e" }}>{message}</p>
+          )}
+        </div>
       )}
     </div>
   );
