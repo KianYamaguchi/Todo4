@@ -24,8 +24,22 @@ export default function Home() {
     fetch("http://localhost:8080/me", {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then((res) => res.json())
-      .then((data) => setUserEmail(data.email));
+      .then((res) => {
+        if (res.status === 401) {
+          // 401ならログアウトしてログイン画面へ
+          localStorage.removeItem("token");
+          router.replace("/login");
+          return Promise.reject("認証エラー");
+        }
+        return res.json();
+      })
+      .then((data) => setUserEmail(data.email))
+      .catch((err) => {
+        // 401以外のエラーもここでキャッチ
+        if (err !== "認証エラー") {
+          alert("ユーザー情報の取得に失敗しました");
+        }
+      });
     fetchTodos(token);
   }, []);
 
