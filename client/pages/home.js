@@ -10,6 +10,7 @@ export default function Home() {
   const [priority, setPriority] = useState("MEDIUM");
   const [draggedIdx, setDraggedIdx] = useState(null);
   const [userEmail, setUserEmail] = useState("");
+  const [checkedIds, setCheckedIds] = useState([]);
 
   // TODO一覧を取得
   useEffect(() => {
@@ -101,6 +102,19 @@ export default function Home() {
       setTodos(sortedTodos);
     }
   };
+  const deleteTodos = async (ids) => {
+    const token = localStorage.getItem("token");
+    await fetch("http://localhost:8080/todos/bulk-delete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ ids }),
+    });
+    setTodos(todos.filter((todo) => !ids.includes(todo.id)));
+    setCheckedIds([]);
+  };
 
   const handlePrioritySort = async (e) => {
     e.preventDefault();
@@ -156,7 +170,7 @@ export default function Home() {
           追加
         </button>
       </form>
-      <p>
+      <div>
         ソート：
         <form onSubmit={handleSort} className={styles.sortForm}>
           <button>期限順</button>
@@ -164,7 +178,7 @@ export default function Home() {
         <form onSubmit={handlePrioritySort} className={styles.sortForm}>
           <button>優先度順</button>
         </form>
-      </p>
+      </div>
       <ul className={styles.list}>
         {todos.map((todo, idx) => (
           <li
@@ -180,9 +194,23 @@ export default function Home() {
             }}
           >
             <div>
-              <div style={{ fontWeight: "bold" }}>{todo.content}</div>
+              <div>
+                <input
+                  type="checkbox"
+                  style={{ fontWeight: "bold" }}
+                  checked={checkedIds.includes(todo.id)}
+                  onChange={() => {
+                    setCheckedIds((prev) =>
+                      prev.includes(todo.id)
+                        ? prev.filter((id) => id !== todo.id)
+                        : [...prev, todo.id]
+                    );
+                  }}
+                />
+                {todo.content}
+              </div>
               <div style={{ fontSize: "0.95em", color: "#666" }}>
-                期限: {new Date(todo.due).toLocaleDateString()}　
+                期限: {new Date(todo.due).toLocaleDateString()}
                 <span
                   style={{
                     color:
@@ -214,13 +242,23 @@ export default function Home() {
       </ul>
       <button
         className={styles.button}
-        style={{ marginBottom: "1rem" }}
+        style={{ marginBottom: "1rem", marginRight: "1rem" }}
         onClick={() => {
           localStorage.removeItem("token");
           router.push("/login");
         }}
       >
         ログアウト
+      </button>
+      <button
+        className={styles.button}
+        style={{ marginBottom: "1rem" }}
+        onClick={async () => {
+          deleteTodos(checkedIds);
+        }}
+        disabled={checkedIds.length === 0}
+      >
+        チェックして完了
       </button>
     </div>
   );

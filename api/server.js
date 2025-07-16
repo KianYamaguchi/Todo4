@@ -117,13 +117,22 @@ app.get("/todos/:id/next", authMiddleware, async (req, res) => {
     return res.status(404).json({ error: "見つかりませんでした" });
   }
 
-  const next = await prisma.todo.findFirst({
+  let next = await prisma.todo.findFirst({
     where: {
-      userId, // 認証ユーザーのみ
-      due: { gt: current.due },
+      userId,
+      order: { gt: current.order },
     },
-    orderBy: { due: "asc" },
+    orderBy: { order: "asc" },
   });
+
+  // 次がなければ一番早いTODOを返す
+  if (!next) {
+    next = await prisma.todo.findFirst({
+      where: { userId },
+      orderBy: { order: "asc" },
+    });
+  }
+
   res.json(next);
 });
 
@@ -240,6 +249,22 @@ app.post("/todos/priority-sort", authMiddleware, async (req, res) => {
     res.json(sortedTodos);
   } catch (error) {
     res.status(500).json({ error: "並び替えに失敗しました" });
+  }
+});
+
+app.post("/todos/bulk-delete", authMiddleware, async (req, res) => {
+  const userId = req.user.userId;
+  const { ids } = req.body;
+  try {
+    await prisma.todo.deleteMany({
+      where: {
+        id: { in: ids },
+        userId,
+      },
+    });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: "削除に失敗しました" });
   }
 });
 
