@@ -38,7 +38,7 @@ export default function Home() {
     });
     const data = await res.json();
     setTodos(Array.isArray(data) ? data : []);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 350));
     setLoading(false); // フェッチ完了後にローディングをfalseに
   };
 
