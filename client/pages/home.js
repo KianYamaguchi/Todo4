@@ -6,7 +6,7 @@ export default function Home() {
   const router = useRouter();
   const [todos, setTodos] = useState([]);
   const [content, setContent] = useState("");
-  const [due, setDue] = useState("");
+  const [due, setDue] = useState(getTodayStr()); // 今日の日付をデフォルトで取得
   const [priority, setPriority] = useState("MEDIUM");
   const [draggedIdx, setDraggedIdx] = useState(null);
   const [userEmail, setUserEmail] = useState("");
@@ -42,6 +42,12 @@ export default function Home() {
       });
     fetchTodos(token);
   }, []);
+
+  function getTodayStr() {
+    const d = new Date();
+    // 祝日や週末なら翌営業日にするなど、独自ロジックもここで追加可能
+    return d.toLocaleDateString("sv-SE"); // "YYYY-MM-DD"形式
+  }
 
   const fetchTodos = async (token) => {
     setLoading(true); // フェッチ開始前にローディングをtrueに

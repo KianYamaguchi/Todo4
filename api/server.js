@@ -232,7 +232,7 @@ app.post("/todos/priority-sort", authMiddleware, async (req, res) => {
     // 1. 優先度順で取得
     const todos = await prisma.todo.findMany({
       where: { userId },
-      orderBy: { priority: "asc" },
+      orderBy: { priority: "desc" },
     });
 
     // 2. 優先度順でorderを振り直す
