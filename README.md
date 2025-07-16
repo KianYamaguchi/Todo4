@@ -20,7 +20,7 @@
 <p><strong>その他</strong>：</p>
 <ul>
   <li>RESTful API設計</li>
-  <li>Prettiter</li>
+  <li>Prettier</li>
 </ul>
 
 
