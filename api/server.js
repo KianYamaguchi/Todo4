@@ -16,7 +16,10 @@ app.use(cors()); // 追加
 
 function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ error: "認証が必要です" });
+  if (!authHeader) {
+    return res.status(401).json({ error: "認証が必要です" });
+  }
+
   const token = authHeader.split(" ")[1];
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
