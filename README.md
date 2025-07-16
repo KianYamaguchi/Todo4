@@ -25,3 +25,4 @@
 
 
 <p>フロントとバックを独立させ、RESTfulな設計を行った。</p>
+<p>.next .node_module .env に関してはgithub上では管理していません。</p>
