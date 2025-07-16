@@ -36,6 +36,14 @@ app.get("/", (req, res) => {
   res.redirect("/login");
 });
 
+app.get("/me", authMiddleware, async (req, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+  if (!user) {
+    return res.status(404).json({ error: "ユーザーが見つかりません" });
+  }
+  res.json({ email: user.email });
+});
+
 // TODO一覧を取得
 app.get("/todos", authMiddleware, async (req, res) => {
   const userId = req.user.userId; // トークンから取得
