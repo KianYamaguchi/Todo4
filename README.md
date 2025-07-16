@@ -1,3 +1,4 @@
+
 <br>使用技術・ライブラリ一覧</br>
 
 <p><strong>フロントエンド</strong>：</p>
@@ -21,5 +22,6 @@
   <li>RESTful API設計</li>
   <li>Prettiter</li>
 </ul>
+
 
 <p>フロントとバックを独立させ、RESTfulな設計を行った。</p>
