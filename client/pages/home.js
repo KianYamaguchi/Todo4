@@ -7,12 +7,16 @@ export default function Home() {
   const [todos, setTodos] = useState([]);
   const [content, setContent] = useState("");
   const [due, setDue] = useState("");
+  const [priority, setPriority] = useState("MEDIUM");
   const [draggedIdx, setDraggedIdx] = useState(null);
 
   // TODO一覧を取得
   useEffect(() => {
     const token = localStorage.getItem("token"); // ログイン時に保存したトークン
-    if (!token) return;
+    if (!token) {
+      router.replace("/login"); // トークンがない場合は/loginへリダイレクト
+      return;
+    }
     fetchTodos(token);
   }, []);
 
@@ -37,13 +41,14 @@ export default function Home() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ content, due }),
+      body: JSON.stringify({ content, due, priority }),
     });
     if (res.ok) {
       const newTodo = await res.json();
       setTodos([...todos, newTodo]);
       setContent("");
       setDue("");
+      setPriority("MEDIUM");
       fetchTodos(token);
     }
   };
@@ -90,6 +95,22 @@ export default function Home() {
     }
   };
 
+  const handlePrioritySort = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    const res = await fetch("http://localhost:8080/todos/priority-sort", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (res.ok) {
+      const sortedTodos = await res.json();
+      setTodos(sortedTodos);
+    }
+  };
+
   return (
     <div className={styles.container}>
       <h1>TODOアプリ</h1>
@@ -107,12 +128,24 @@ export default function Home() {
           onChange={(e) => setDue(e.target.value)}
           required
         />
+        <select
+          value={priority}
+          onChange={(e) => setPriority(e.target.value)}
+          required
+        >
+          <option value="LOW">低</option>
+          <option value="MEDIUM">中</option>
+          <option value="HIGH">高</option>
+        </select>
         <button className={styles.button} type="submit">
           追加
         </button>
       </form>
       <form onSubmit={handleSort}>
         <button>期限順</button>
+      </form>
+      <form onSubmit={handlePrioritySort}>
+        <button>優先度順</button>
       </form>
       <ul className={styles.list}>
         {todos.map((todo, idx) => (

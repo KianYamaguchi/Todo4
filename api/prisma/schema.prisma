@@ -19,10 +19,17 @@ model User {
   password String
 }
 
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 model Todo {
   id      String   @id @default(uuid())
   due     DateTime
   content String
-  userId  String // ← 追加
-  order     Int     // ← 並び順を保持するカラム
+  userId  String
+  order   Int
+  priority Priority @default(MEDIUM)
 }
