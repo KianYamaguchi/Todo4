@@ -33,7 +33,7 @@ function authMiddleware(req, res, next) {
 }
 
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.redirect("/login");
 });
 
 // TODO一覧を取得
@@ -121,10 +121,10 @@ app.get("/todos/:id/next", authMiddleware, async (req, res) => {
 
 // TODO追加
 app.post("/todos", authMiddleware, async (req, res) => {
-  const { content, due } = req.body;
+  const { content, due, priority } = req.body;
   const userId = req.user.userId;
-  if (!content || !due) {
-    return res.status(400).json({ error: "contentとdueは必須です" });
+  if (!content || !due || !priority) {
+    return res.status(400).json({ error: "contentとdueとpriorityは必須です" });
   }
   try {
     // 既存TODOの最大orderを取得
@@ -140,6 +140,7 @@ app.post("/todos", authMiddleware, async (req, res) => {
         due: new Date(due),
         userId,
         order: nextOrder, // ← ここで番号を振る
+        priority,
       },
     });
     res.status(201).json(todo);
@@ -150,10 +151,10 @@ app.post("/todos", authMiddleware, async (req, res) => {
 
 app.put("/todos/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
-  const { content, due } = req.body;
+  const { content, due, priority } = req.body;
   const userId = req.user.userId; // トークンから取得
-  if (!content || !due) {
-    return res.status(400).json({ error: "contentとdueは必須です" });
+  if (!content || !due || !priority) {
+    return res.status(400).json({ error: "contentとdueとpriorityは必須です" });
   }
   try {
     // まず自分のTodoか確認
@@ -167,6 +168,7 @@ app.put("/todos/:id", authMiddleware, async (req, res) => {
       data: {
         content,
         due: new Date(due),
+        priority,
       },
     });
     res.json(updated);
@@ -185,6 +187,35 @@ app.post("/todos/sort", authMiddleware, async (req, res) => {
     });
 
     // 2. 日付順でorderを振り直す
+    const updatePromises = todos.map((todo, idx) =>
+      prisma.todo.update({
+        where: { id: todo.id },
+        data: { order: idx },
+      })
+    );
+    await Promise.all(updatePromises);
+
+    // 3. 更新後の一覧を返す（order順で取得）
+    const sortedTodos = await prisma.todo.findMany({
+      where: { userId },
+      orderBy: { order: "asc" },
+    });
+    res.json(sortedTodos);
+  } catch (error) {
+    res.status(500).json({ error: "並び替えに失敗しました" });
+  }
+});
+
+app.post("/todos/priority-sort", authMiddleware, async (req, res) => {
+  const userId = req.user.userId;
+  try {
+    // 1. 優先度順で取得
+    const todos = await prisma.todo.findMany({
+      where: { userId },
+      orderBy: { priority: "asc" },
+    });
+
+    // 2. 優先度順でorderを振り直す
     const updatePromises = todos.map((todo, idx) =>
       prisma.todo.update({
         where: { id: todo.id },

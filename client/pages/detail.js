@@ -13,6 +13,7 @@ export default function DetailPage() {
   const [nextTodo, setNextTodo] = useState(null);
   const [content, setContent] = useState("");
   const [due, setDue] = useState("");
+  const [priority, setPriority] = useState("MEDIUM");
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -27,6 +28,7 @@ export default function DetailPage() {
       setTodo(data);
       setContent(data.content);
       setDue(data.due);
+      setPriority(data.priority);
     };
     fetchTodo();
   }, [id]);
@@ -55,7 +57,7 @@ export default function DetailPage() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ content, due }),
+      body: JSON.stringify({ content, due, priority }),
     });
     if (res.ok) {
       const updatedTodo = await res.json();
@@ -87,6 +89,7 @@ export default function DetailPage() {
       <h1 className={styles.detailTitle}>TODO詳細</h1>
       <h2>{content}</h2>
       <p>（期限: {due ? new Date(due).toLocaleDateString() : ""}）</p>
+      <p>（優先度: {priority}）</p>
       <button
         className={styles.detailButton}
         onClick={() => router.push("/home")}
@@ -124,6 +127,16 @@ export default function DetailPage() {
           onChange={(e) => setDue(e.target.value)}
           required
         />
+        <select
+          className={styles.updateSelect}
+          value={priority}
+          onChange={(e) => setPriority(e.target.value)}
+          required
+        >
+          <option value="LOW">低</option>
+          <option value="MEDIUM">中</option>
+          <option value="HIGH">高</option>
+        </select>
         {message && <p className={styles.message}>{message}</p>}
         <button className={styles.detailButton} type="submit">
           更新
