@@ -52,7 +52,7 @@ app.get("/todos", authMiddleware, async (req, res) => {
   const userId = req.user.userId; // トークンから取得
   try {
     const todos = await prisma.todo.findMany({
-      where: { userId }, // 自分のTodoだけ
+      where: { userId, completed: false }, // 自分のTodoだけ
       orderBy: { order: "asc" },
     });
     res.json(todos);
@@ -62,6 +62,21 @@ app.get("/todos", authMiddleware, async (req, res) => {
 });
 
 app.delete("/todos/:id", authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.userId; // トークンから取得
+  try {
+    // 自分のTodoだけ削除できるようにする
+    const todo = await prisma.todo.findUnique({ where: { id } });
+    if (!todo || todo.userId !== userId) {
+      return res.status(403).json({ error: "権限がありません" });
+    }
+    await prisma.todo.delete({ where: { id } });
+    res.status(204).end();
+  } catch (error) {
+    res.status(500).json({ error: "削除に失敗しました" });
+  }
+});
+app.delete("/completed/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
   const userId = req.user.userId; // トークンから取得
   try {
@@ -115,7 +130,9 @@ app.get("/todos/:id", authMiddleware, async (req, res) => {
 app.get("/todos/:id/next", authMiddleware, async (req, res) => {
   const { id } = req.params;
   const userId = req.user.userId;
-  const current = await prisma.todo.findUnique({ where: { id } });
+  const current = await prisma.todo.findUnique({
+    where: { id, completed: false },
+  });
   if (!current || current.userId !== userId) {
     return res.status(404).json({ error: "見つかりませんでした" });
   }
@@ -123,6 +140,7 @@ app.get("/todos/:id/next", authMiddleware, async (req, res) => {
   let next = await prisma.todo.findFirst({
     where: {
       userId,
+      completed: false,
       order: { gt: current.order },
     },
     orderBy: { order: "asc" },
@@ -131,7 +149,7 @@ app.get("/todos/:id/next", authMiddleware, async (req, res) => {
   // 次がなければ一番早いTODOを返す
   if (!next) {
     next = await prisma.todo.findFirst({
-      where: { userId },
+      where: { userId, completed: false },
       orderBy: { order: "asc" },
     });
   }
@@ -202,14 +220,14 @@ app.post("/todos/sort", authMiddleware, async (req, res) => {
   try {
     // 1. 日付順で取得
     const todos = await prisma.todo.findMany({
-      where: { userId },
+      where: { userId, completed: false },
       orderBy: { due: "asc" },
     });
 
     // 2. 日付順でorderを振り直す
     const updatePromises = todos.map((todo, idx) =>
       prisma.todo.update({
-        where: { id: todo.id },
+        where: { id: todo.id, completed: false },
         data: { order: idx },
       })
     );
@@ -217,7 +235,7 @@ app.post("/todos/sort", authMiddleware, async (req, res) => {
 
     // 3. 更新後の一覧を返す（order順で取得）
     const sortedTodos = await prisma.todo.findMany({
-      where: { userId },
+      where: { userId, completed: false },
       orderBy: { order: "asc" },
     });
     res.json(sortedTodos);
@@ -231,14 +249,14 @@ app.post("/todos/priority-sort", authMiddleware, async (req, res) => {
   try {
     // 1. 優先度順で取得
     const todos = await prisma.todo.findMany({
-      where: { userId },
+      where: { userId, completed: false },
       orderBy: { priority: "desc" },
     });
 
     // 2. 優先度順でorderを振り直す
     const updatePromises = todos.map((todo, idx) =>
       prisma.todo.update({
-        where: { id: todo.id },
+        where: { id: todo.id, completed: false },
         data: { order: idx },
       })
     );
@@ -246,7 +264,7 @@ app.post("/todos/priority-sort", authMiddleware, async (req, res) => {
 
     // 3. 更新後の一覧を返す（order順で取得）
     const sortedTodos = await prisma.todo.findMany({
-      where: { userId },
+      where: { userId, completed: false },
       orderBy: { order: "asc" },
     });
     res.json(sortedTodos);
@@ -259,15 +277,32 @@ app.post("/todos/bulk-delete", authMiddleware, async (req, res) => {
   const userId = req.user.userId;
   const { ids } = req.body;
   try {
-    await prisma.todo.deleteMany({
+    await prisma.todo.updateMany({
       where: {
         id: { in: ids },
         userId,
       },
+      data: {
+        completed: true, // completedをtrueに変更
+      },
     });
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: "削除に失敗しました" });
+    res.status(500).json({ error: "完了処理に失敗しました" });
+  }
+});
+
+app.get("/completed", authMiddleware, async (req, res) => {
+  const userId = req.user.userId;
+  console.log("User ID:", userId); // デバッグ用
+  try {
+    const todos = await prisma.todo.findMany({
+      where: { userId, completed: true }, // 完了したTODOのみ
+      orderBy: { order: "asc" },
+    });
+    res.json(todos);
+  } catch (error) {
+    res.status(500).json({ error: "取得に失敗しました" });
   }
 });
 

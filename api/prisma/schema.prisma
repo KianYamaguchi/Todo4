@@ -32,4 +32,5 @@ model Todo {
   userId  String
   order   Int
   priority Priority @default(MEDIUM)
+  completed Boolean @default(false)
 }
