@@ -90,6 +90,7 @@ export default function DetailPage() {
       <h2>{content}</h2>
       <p>（期限: {due ? new Date(due).toLocaleDateString() : ""}）</p>
       <p>（優先度: {priority}）</p>
+      <p>（ {todo.completed ? "完了" : "未完了"}）</p>
       <button
         className={styles.detailButton}
         onClick={() => router.push("/home")}
