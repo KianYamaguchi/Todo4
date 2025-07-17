@@ -132,3 +132,9 @@
     transform: rotate(360deg);
   }
 }
+.completedButton {
+  background: #faff60;
+}
+.completedButton:hover {
+  background: #dbd963;
+}

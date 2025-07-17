@@ -77,10 +77,15 @@ export default function TodoHomeView(props) {
       ) : (
         <ul className={styles.list}>
           {todos.map((todo, idx) => {
-            // 今日の日付（YYYY-MM-DD形式）を取得
-            const todayStr = new Date().toLocaleDateString("sv-SE");
+            // 今日の日付（YYYY-MM-DD形式）
+            const todayStr = new Date().toISOString().slice(0, 10);
+            // todo.dueをYYYY-MM-DD形式に変換
+            const todoDueStr =
+              typeof todo.due === "string"
+                ? todo.due.slice(0, 10)
+                : new Date(todo.due).toISOString().slice(0, 10);
             // 期限が今日以前なら色を変える
-            const isDueTodayOrPast = todo.due <= todayStr;
+            const isDueTodayOrPast = todoDueStr <= todayStr;
 
             return (
               <li
@@ -170,13 +175,26 @@ export default function TodoHomeView(props) {
       </button>
       <button
         className={styles.button}
-        style={{ marginBottom: "1rem" }}
+        style={{ marginBottom: "1rem", marginRight: "1rem" }}
         onClick={async () => {
           deleteTodos(checkedIds);
         }}
         disabled={checkedIds.length === 0}
       >
         チェックして完了
+      </button>
+      <button
+        className={`${styles.button} ${styles.completedButton}`}
+        style={{
+          marginBottom: "1rem",
+          marginRight: "1rem",
+          color: "#222", // 文字色を濃いめに
+          fontWeight: "bold",
+          border: "none",
+        }}
+        onClick={() => router.push(`/completed`)}
+      >
+        完了したTODOを表示
       </button>
     </div>
   );
