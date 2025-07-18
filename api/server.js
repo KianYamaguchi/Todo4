@@ -127,6 +127,26 @@ app.get("/todos/:id", authMiddleware, async (req, res) => {
   }
 });
 
+app.put("/completed/:id", authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.userId;
+  try {
+    // 自分のTodoだけ操作できるようにする
+    const todo = await prisma.todo.findUnique({ where: { id } });
+    if (!todo || todo.userId !== userId) {
+      return res.status(403).json({ error: "権限がありません" });
+    }
+    // completedをfalse（未完了）に変更
+    const updated = await prisma.todo.update({
+      where: { id },
+      data: { completed: false },
+    });
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: "未完了への変更に失敗しました" });
+  }
+});
+
 app.get("/todos/:id/next", authMiddleware, async (req, res) => {
   const { id } = req.params;
   const userId = req.user.userId;
