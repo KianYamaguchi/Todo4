@@ -45,6 +45,24 @@ export default function Completed() {
       console.error(error);
     }
   };
+  const updateTodoStatus = async (id) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const res = await fetch(`http://localhost:8080/completed/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) throw new Error("Failed to update todo status");
+      setTodos((prev) => prev.filter((todo) => todo.id !== id));
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <div className={styles.container}>
@@ -62,6 +80,21 @@ export default function Completed() {
               <span style={{ marginLeft: 12, fontSize: "0.9em" }}>
                 期限: {new Date(todo.due).toLocaleDateString()}
               </span>
+              <button
+                style={{
+                  backgroundColor: "#faff60", // 明るい黄
+                  color: "#222", // 文字色を濃いめに
+                  marginLeft: 12,
+                  border: "none",
+                  padding: "6px 16px",
+                  borderRadius: "4px",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                }}
+                onClick={() => updateTodoStatus(todo.id)}
+              >
+                未完了に訂正
+              </button>
               <button
                 style={{ background: "#e74c3c", color: "#fff", marginLeft: 12 }}
                 onClick={() => deleteTodo(todo.id)}
