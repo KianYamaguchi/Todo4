@@ -20,26 +20,6 @@ export default function Home() {
       router.replace("/login"); // トークンがない場合は/loginへリダイレクト
       return;
     }
-    // ユーザー情報取得
-    fetch("http://localhost:8080/me", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => {
-        if (res.status === 401) {
-          // 401ならログアウトしてログイン画面へ
-          localStorage.removeItem("token");
-          router.replace("/login");
-          return Promise.reject("認証エラー");
-        }
-        return res.json();
-      })
-      .then((data) => setUserEmail(data.email))
-      .catch((err) => {
-        // 401以外のエラーもここでキャッチ
-        if (err !== "認証エラー") {
-          alert("ユーザー情報の取得に失敗しました");
-        }
-      });
     fetchTodos(token);
   }, []);
 
@@ -57,7 +37,8 @@ export default function Home() {
       },
     });
     const data = await res.json();
-    setTodos(Array.isArray(data) ? data : []);
+    setTodos(Array.isArray(data.todos) ? data.todos : []);
+    setUserEmail(data.user.email);
     await new Promise((resolve) => setTimeout(resolve, 350));
     setLoading(false); // フェッチ完了後にローディングをfalseに
   };

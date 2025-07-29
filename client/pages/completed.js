@@ -28,8 +28,10 @@ export default function Completed() {
   }, [router]);
 
   const deleteTodo = async (id) => {
+    if (!id) return;
+    const ok = window.confirm("本当に削除してよろしいですか？");
+    if (!ok) return;
     const token = localStorage.getItem("token");
-    if (!token) return;
 
     try {
       const res = await fetch(`http://localhost:8080/completed/${id}`, {
