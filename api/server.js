@@ -39,23 +39,22 @@ app.get("/", (req, res) => {
   res.redirect("/login");
 });
 
-app.get("/me", authMiddleware, async (req, res) => {
-  const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
-  if (!user) {
-    return res.status(404).json({ error: "ユーザーが見つかりません" });
-  }
-  res.json({ email: user.email });
-});
-
 // TODO一覧を取得
 app.get("/todos", authMiddleware, async (req, res) => {
-  const userId = req.user.userId; // トークンから取得
   try {
-    const todos = await prisma.todo.findMany({
-      where: { userId, completed: false }, // 自分のTodoだけ
-      orderBy: { order: "asc" },
+    const userId = req.user.userId;
+    // ユーザー情報とTODOを同時に取得
+    const [user, todos] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId } }),
+      prisma.todo.findMany({
+        where: { userId, completed: false },
+        orderBy: { order: "asc" },
+      }),
+    ]);
+    res.json({
+      user: { email: user.email },
+      todos: todos,
     });
-    res.json(todos);
   } catch (error) {
     res.status(500).json({ error: "取得に失敗しました" });
   }
@@ -321,6 +320,7 @@ app.get("/completed", authMiddleware, async (req, res) => {
       orderBy: { order: "asc" },
     });
     res.json(todos);
+    console.log("Completed todos:", todos); // デバッグ用
   } catch (error) {
     res.status(500).json({ error: "取得に失敗しました" });
   }

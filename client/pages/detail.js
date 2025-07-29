@@ -70,6 +70,9 @@ export default function DetailPage() {
   };
   const handleDelete = async () => {
     if (!todo) return;
+    const ok = window.confirm("本当に削除してよろしいですか？");
+    if (!ok) return;
+
     const res = await fetch(`http://localhost:8080/todos/${todo.id}`, {
       method: "DELETE",
       headers: {
